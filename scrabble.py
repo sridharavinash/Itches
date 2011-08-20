@@ -1,3 +1,5 @@
+#!/usr/bin/python
+#simple python program to generate a valid word list from input letters
 import sys
 import itertools
 
@@ -15,4 +17,7 @@ def main(inW):
     print olist
                     
 if __name__ == "__main__":
-    main(sys.argv[1])
+    try:
+        main(sys.argv[1])
+    except IndexError:
+        print "usage:",sys.argv[0], "letters_combination"
