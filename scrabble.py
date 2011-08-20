@@ -1,5 +1,8 @@
 #!/usr/bin/python
-#simple python program to generate a valid word list from input letters
+# simple python program to generate a valid word list from input letters
+# To use this program download the word list file and put it in the same folder as this file:
+# http://code.google.com/p/dotnetperls-controls/downloads/detail?name=enable1.txt
+
 import sys
 import itertools
 
