@@ -40,6 +40,7 @@ import android.widget.ListView;
 
 
 public class TeamTrafficLightsActivity extends Activity {
+	private final String RESTPROJECTSPATH="/httpAuth/app/rest/projects";
 	// Button Listener
 	private OnClickListener connectListener = new OnClickListener(){
 		public void onClick(View v){
@@ -87,7 +88,7 @@ public class TeamTrafficLightsActivity extends Activity {
 				new UsernamePasswordCredentials(user,pass));
 		
 		
-		HttpGet httpGet = new HttpGet("http://"+url+"/httpAuth/app/rest/projects");
+		HttpGet httpGet = new HttpGet("http://"+url+ RESTPROJECTSPATH);
 		HttpResponse httpResponse;
 		try{
 			httpResponse = httpClient.execute(httpGet);
@@ -96,16 +97,10 @@ public class TeamTrafficLightsActivity extends Activity {
 			showProjectList(projectList);
 		}catch (ClientProtocolException e){
 			e.printStackTrace();
-		    AlertDialog alertDialog = new AlertDialog.Builder(TeamTrafficLightsActivity.this).create();
-		    alertDialog.setTitle("Erorr");
-		    alertDialog.setMessage("Oh Oh! We are having trouble connecting to the server with those credentials! Please recheck your url, username and password.");
-		    alertDialog.show();
+			showAlertDialog("Oh Oh! We are having trouble connecting to the server with those credentials! Please recheck your url, username and password.");		   
 		} catch (IOException e) {
 			e.printStackTrace();
-			AlertDialog alertDialog = new AlertDialog.Builder(TeamTrafficLightsActivity.this).create();
-		    alertDialog.setTitle("Erorr");
-		    alertDialog.setMessage("Oh Oh! We are having trouble connecting to the server with those credentials!Please recheck your url, username and password.");
-		    alertDialog.show();
+			showAlertDialog("Oh Oh! We are having trouble connecting to the server with those credentials! Please recheck your url, username and password.");
 		}
 	}
 	
@@ -147,7 +142,12 @@ public class TeamTrafficLightsActivity extends Activity {
 		return myHandler.getProjects();
 	}
 	
-	
+	private void showAlertDialog(String message){
+		 AlertDialog alertDialog = new AlertDialog.Builder(TeamTrafficLightsActivity.this).create();
+		 alertDialog.setTitle("Erorr");
+		 alertDialog.setMessage(message);
+		 alertDialog.show();
+	}
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
