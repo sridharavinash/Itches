@@ -22,16 +22,12 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.AbstractHttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.DefaultHandler;
-
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.InputMethodManager;
@@ -43,45 +39,6 @@ import android.widget.ListView;
 
 
 public class TeamTrafficLightsActivity extends Activity {
-	
-	class TCDataHandler extends DefaultHandler{
-		private StringBuffer buffer = new StringBuffer();
-		private ArrayList<TeamCityProject> TCprojects = new ArrayList<TeamCityProject>();
-		private TeamCityProject tcproject;
-		@Override
-		public void startElement(String uri,
-								 String localName,
-								 String qName,
-								 Attributes attrs) throws SAXException{
-			buffer.setLength(0);
-			if(localName.equals("project")){
-				tcproject = new TeamCityProject();
-				tcproject.projectName = attrs.getValue("name");
-				tcproject.projectId = attrs.getValue("id");
-				tcproject.projectHref = attrs.getValue("href");
-
-			}
-			
-		}
-		@Override
-		public void characters(char[] ch, int start, int length)
-		            throws SAXException {
-			 buffer.append(ch, start, length);
-		}
-
-		@Override
-		public void endElement(String uri, String localName, String qName)
-		            throws SAXException {
-			if(localName.equals("project")){
-				TCprojects.add(tcproject);
-			}
-		}
-		
-		public ArrayList<TeamCityProject> getProjects(){
-			return TCprojects;
-		}
-	}
-	
 	// Button Listener
 	private OnClickListener connectListener = new OnClickListener(){
 		public void onClick(View v){
@@ -143,6 +100,7 @@ public class TeamTrafficLightsActivity extends Activity {
 		}
 	}
 	
+	/** Show a list of projects from server */
 	private void showProjectList(ArrayList<TeamCityProject> projectList){
 		ArrayList<String> myList = new ArrayList<String>();
 		Iterator<TeamCityProject> iterator = projectList.iterator();
