@@ -9,22 +9,23 @@ import org.xml.sax.helpers.DefaultHandler;
 
 
 /** DataHandler for XML parsing */
-class TCDataHandler extends DefaultHandler implements IDataInterface{
+class BuildsDataHandler extends DefaultHandler implements IDataInterface{
 		private StringBuffer buffer = new StringBuffer();
-		private ArrayList<TeamCityProject> TCprojects = new ArrayList<TeamCityProject>();
-		private TeamCityProject tcproject;
+		private ArrayList<TeamCityBuilds> TCBuilds = new ArrayList<TeamCityBuilds>();
+		private TeamCityBuilds tcbuild;
 		@Override
 		public void startElement(String uri,
 								 String localName,
 								 String qName,
 								 Attributes attrs) throws SAXException{
 			buffer.setLength(0);
-			if(localName.equals("project")){
-				tcproject = new TeamCityProject();
-				tcproject.projectName = attrs.getValue("name");
-				tcproject.projectId = attrs.getValue("id");
-				tcproject.projectHref = attrs.getValue("href");
-
+			if(localName.equals("build")){
+				tcbuild = new TeamCityBuilds();
+				tcbuild.buildId = attrs.getValue("id");
+				tcbuild.buildCount = attrs.getValue("number");
+				tcbuild.buildHref = attrs.getValue("href");
+				tcbuild.startDate = attrs.getValue("startDate");
+				tcbuild.status = attrs.getValue("status");
 			}
 			
 		}
@@ -37,12 +38,13 @@ class TCDataHandler extends DefaultHandler implements IDataInterface{
 		@Override
 		public void endElement(String uri, String localName, String qName)
 		            throws SAXException {
-			if(localName.equals("project")){
-				TCprojects.add(tcproject);
+			if(localName.equals("build")){
+				TCBuilds.add(tcbuild);
 			}
 		}
+		
 		@Override
 		public ArrayList<?> getData() {
-			return TCprojects;
+			return TCBuilds;
 		}
 	}

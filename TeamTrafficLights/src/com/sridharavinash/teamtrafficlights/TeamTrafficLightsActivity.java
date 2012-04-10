@@ -22,6 +22,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.AbstractHttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
@@ -29,9 +30,12 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -41,6 +45,10 @@ import android.widget.ListView;
 
 public class TeamTrafficLightsActivity extends Activity {
 	private final String RESTPROJECTSPATH="/httpAuth/app/rest/projects";
+	EditText teamCityUrl;
+	EditText teamCityUser;
+	EditText teamCityPass;
+	
 	// Button Listener
 	private OnClickListener connectListener = new OnClickListener(){
 		public void onClick(View v){
@@ -48,11 +56,14 @@ public class TeamTrafficLightsActivity extends Activity {
 			imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
 
 			//Get user input data
-			EditText teamCityUrl = (EditText)findViewById(R.id.serverUrl);
-			EditText teamCityUser = (EditText)findViewById(R.id.user);
-			EditText teamCityPass = (EditText)findViewById(R.id.pass);
+			teamCityUrl = (EditText)findViewById(R.id.serverUrl);
+			teamCityUser = (EditText)findViewById(R.id.user);
+			teamCityPass = (EditText)findViewById(R.id.pass);
 			
-			getResponse(teamCityUrl.getText().toString().trim(),teamCityUser.getText().toString().trim(),teamCityPass.getText().toString());
+			getResponse(teamCityUrl.getText().toString().trim(),
+						teamCityUser.getText().toString().trim(),
+						teamCityPass.getText().toString(),
+						RESTPROJECTSPATH);
 		}
 	};
 	
@@ -78,7 +89,7 @@ public class TeamTrafficLightsActivity extends Activity {
 	}
 
 	/**Make a call to the server with credentials and get a response */
-	private void getResponse(String url, String user, String pass){
+	private void getResponse(String url, String user, String pass,String restPath){
 		HttpHost targetHost = new HttpHost(url, 80, "http");
 		
 		HttpClient httpClient = new DefaultHttpClient();
@@ -88,13 +99,21 @@ public class TeamTrafficLightsActivity extends Activity {
 				new UsernamePasswordCredentials(user,pass));
 		
 		
-		HttpGet httpGet = new HttpGet("http://"+url+ RESTPROJECTSPATH);
+		HttpGet httpGet = new HttpGet("http://"+url+ restPath);
 		HttpResponse httpResponse;
 		try{
 			httpResponse = httpClient.execute(httpGet);
 			StringBuilder resp = inputStreamToString(httpResponse.getEntity().getContent());
-			ArrayList<TeamCityProject> projectList = ParseXMLResponse(resp);
-			showProjectList(projectList);
+			
+			
+			if(restPath.contains("id:project")){
+				ArrayList<TeamCityBuilds> respXml = (ArrayList<TeamCityBuilds>) ParseXMLResponse(resp, new BuildsDataHandler());
+			}else{
+				ArrayList<TeamCityProject> respXml = (ArrayList<TeamCityProject>) ParseXMLResponse(resp, new TCDataHandler());
+				showProjectList(respXml);
+			}
+				
+			
 		}catch (ClientProtocolException e){
 			e.printStackTrace();
 			showAlertDialog("Oh Oh! We are having trouble connecting to the server with those credentials! Please recheck your url, username and password.");		   
@@ -105,7 +124,7 @@ public class TeamTrafficLightsActivity extends Activity {
 	}
 	
 	/** Show a list of projects from server */
-	private void showProjectList(ArrayList<TeamCityProject> projectList){
+	private void showProjectList(final ArrayList<TeamCityProject> projectList){
 		ArrayList<String> myList = new ArrayList<String>();
 		Iterator<TeamCityProject> iterator = projectList.iterator();
 		while(iterator.hasNext()){
@@ -116,18 +135,26 @@ public class TeamTrafficLightsActivity extends Activity {
         ListView lv = new ListView(this);
         lv.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1,myList));
         setContentView(lv);
+        lv.setOnItemClickListener(new OnItemClickListener(){
+
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
+				Log.i("TeamCityActivity", projectList.get(pos).projectId);
+				
+			}
+        	
+        });
 	}
 
 	/** Parse response to get a list of available projects from the server
 	 * @return */
-	private ArrayList<TeamCityProject> ParseXMLResponse(StringBuilder response){
+	private ArrayList<?> ParseXMLResponse(StringBuilder response, IDataInterface myHandler){
 		 SAXParserFactory spf = SAXParserFactory.newInstance();
-		 TCDataHandler myHandler = new TCDataHandler();
 		 try {
 			SAXParser sp = spf.newSAXParser();
 			XMLReader xr = sp.getXMLReader();
 			
-			xr.setContentHandler(myHandler);
+			xr.setContentHandler((ContentHandler) myHandler);
 			InputSource is = new InputSource();
 			is.setCharacterStream(new StringReader(response.toString()));
 			xr.parse(is);
@@ -139,7 +166,7 @@ public class TeamTrafficLightsActivity extends Activity {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return myHandler.getProjects();
+		return myHandler.getData();
 	}
 	
 	private void showAlertDialog(String message){
