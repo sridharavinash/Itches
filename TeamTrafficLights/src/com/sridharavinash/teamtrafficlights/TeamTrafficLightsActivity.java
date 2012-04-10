@@ -26,6 +26,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
@@ -95,8 +96,16 @@ public class TeamTrafficLightsActivity extends Activity {
 			showProjectList(projectList);
 		}catch (ClientProtocolException e){
 			e.printStackTrace();
+		    AlertDialog alertDialog = new AlertDialog.Builder(TeamTrafficLightsActivity.this).create();
+		    alertDialog.setTitle("Erorr");
+		    alertDialog.setMessage("Oh Oh! We are having trouble connecting to the server with those credentials! Please recheck your url, username and password.");
+		    alertDialog.show();
 		} catch (IOException e) {
 			e.printStackTrace();
+			AlertDialog alertDialog = new AlertDialog.Builder(TeamTrafficLightsActivity.this).create();
+		    alertDialog.setTitle("Erorr");
+		    alertDialog.setMessage("Oh Oh! We are having trouble connecting to the server with those credentials!Please recheck your url, username and password.");
+		    alertDialog.show();
 		}
 	}
 	
@@ -107,6 +116,8 @@ public class TeamTrafficLightsActivity extends Activity {
 		while(iterator.hasNext()){
 			myList.add(iterator.next().projectName);
 		}
+		if(myList.isEmpty())
+			myList.add("No Projects!");
         ListView lv = new ListView(this);
         lv.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1,myList));
         setContentView(lv);
