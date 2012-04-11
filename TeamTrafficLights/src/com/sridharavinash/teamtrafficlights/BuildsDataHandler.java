@@ -28,6 +28,12 @@ class BuildsDataHandler extends DefaultHandler implements IDataInterface{
 				tcbuild.status = attrs.getValue("status");
 			}
 			
+			if(localName.equals("buildType")){
+				tcbuild = new TeamCityBuilds();
+				tcbuild.buildId = attrs.getValue("id");
+				tcbuild.buildName = attrs.getValue("name");
+			}
+			
 		}
 		@Override
 		public void characters(char[] ch, int start, int length)
@@ -39,6 +45,10 @@ class BuildsDataHandler extends DefaultHandler implements IDataInterface{
 		public void endElement(String uri, String localName, String qName)
 		            throws SAXException {
 			if(localName.equals("build")){
+				TCBuilds.add(tcbuild);
+			}
+			
+			if(localName.equals("buildType")){
 				TCBuilds.add(tcbuild);
 			}
 		}

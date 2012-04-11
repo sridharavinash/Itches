@@ -8,4 +8,5 @@ public class TeamCityBuilds{
 	 String buildTypeId;
 	 String startDate;
 	 String buildHref;
+	 String buildName;
 	}

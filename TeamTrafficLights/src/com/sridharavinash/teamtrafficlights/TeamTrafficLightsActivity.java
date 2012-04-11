@@ -6,8 +6,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
+import java.util.Locale;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
@@ -45,6 +50,8 @@ import android.widget.ListView;
 
 public class TeamTrafficLightsActivity extends Activity {
 	private final String RESTPROJECTSPATH="/httpAuth/app/rest/projects";
+	private final String RESTBUILDTYPEPATH=RESTPROJECTSPATH+"/id:";
+	private final String RESTBUILDSPATH = "/httpAuth/app/rest/buildTypes/id:";
 	EditText teamCityUrl;
 	EditText teamCityUser;
 	EditText teamCityPass;
@@ -106,11 +113,17 @@ public class TeamTrafficLightsActivity extends Activity {
 			StringBuilder resp = inputStreamToString(httpResponse.getEntity().getContent());
 			
 			
-			if(restPath.contains("id:project")){
+			if(restPath.contains(RESTBUILDTYPEPATH)){
 				ArrayList<TeamCityBuilds> respXml = (ArrayList<TeamCityBuilds>) ParseXMLResponse(resp, new BuildsDataHandler());
-			}else{
+				showBuildNameList(respXml);
+			}
+			else if(restPath.contains(RESTPROJECTSPATH)){
 				ArrayList<TeamCityProject> respXml = (ArrayList<TeamCityProject>) ParseXMLResponse(resp, new TCDataHandler());
 				showProjectList(respXml);
+			}else{
+				//gets you build name and status information
+				ArrayList<TeamCityBuilds> respXml = (ArrayList<TeamCityBuilds>) ParseXMLResponse(resp, new BuildsDataHandler());
+				showBuildStatusList(respXml);
 			}
 				
 			
@@ -121,6 +134,56 @@ public class TeamTrafficLightsActivity extends Activity {
 			e.printStackTrace();
 			showAlertDialog("Oh Oh! We are having trouble connecting to the server with those credentials! Please recheck your url, username and password.");
 		}
+	}
+	
+	/** Show a list of build statuses for project */
+	private void showBuildStatusList(final ArrayList<TeamCityBuilds> projectList){
+		ArrayList<String> myList = new ArrayList<String>();
+		Iterator<TeamCityBuilds> iterator = projectList.iterator();
+		while(iterator.hasNext()){
+			try {
+				SimpleDateFormat ISO8601DATEFORMAT = new SimpleDateFormat("yyyyMMdd'T'HHmmssZ", Locale.US);
+				Date dateString = ISO8601DATEFORMAT.parse(iterator.next().startDate);
+
+				myList.add(iterator.next().status + " - " + DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(dateString));
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+			
+		}
+		if(myList.isEmpty())
+			myList.add("No Status for build!");
+		
+        ListView lv = new ListView(this);
+        lv.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1,myList));
+        setContentView(lv);
+	}
+	
+	/** Show a list of build names for project */
+	private void showBuildNameList(final ArrayList<TeamCityBuilds> projectList){
+		ArrayList<String> myList = new ArrayList<String>();
+		Iterator<TeamCityBuilds> iterator = projectList.iterator();
+		while(iterator.hasNext()){
+			myList.add(iterator.next().buildName);
+		}
+		if(myList.isEmpty())
+			myList.add("No Builds for Project!");
+		
+        ListView lv = new ListView(this);
+        lv.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1,myList));
+        setContentView(lv);
+        lv.setOnItemClickListener(new OnItemClickListener(){
+        	@Override
+			public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
+				getResponse(teamCityUrl.getText().toString().trim(),
+						teamCityUser.getText().toString().trim(),
+						teamCityPass.getText().toString(),
+						RESTBUILDSPATH+projectList.get(pos).buildId+"/builds");
+			}
+        	
+        });
 	}
 	
 	/** Show a list of projects from server */
@@ -136,10 +199,13 @@ public class TeamTrafficLightsActivity extends Activity {
         lv.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1,myList));
         setContentView(lv);
         lv.setOnItemClickListener(new OnItemClickListener(){
-
-			@Override
+        	@Override
 			public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
 				Log.i("TeamCityActivity", projectList.get(pos).projectId);
+				getResponse(teamCityUrl.getText().toString().trim(),
+						teamCityUser.getText().toString().trim(),
+						teamCityPass.getText().toString(),
+						RESTBUILDTYPEPATH+projectList.get(pos).projectId);
 				
 			}
         	
