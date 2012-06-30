@@ -7,6 +7,7 @@ import sys
 import itertools
 
 def main(inW):
+    print "Finding Scrabble words for:", inW
     mylist = [x for x in inW]
     out = []
     for i in xrange(2,len(inW)+1):
@@ -17,10 +18,12 @@ def main(inW):
     f = open('enable1.txt')
     flist = (x.strip() for x in f)
     olist = set.intersection(set(out),set(flist))
+    olist = sorted(olist,key=len)
+    olist.reverse()
     print olist
                     
 if __name__ == "__main__":
     try:
-        main(sys.argv[1])
+        main(sys.argv[1])      
     except IndexError:
         print "usage:",sys.argv[0], "letters_combination"
